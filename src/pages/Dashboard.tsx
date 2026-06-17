@@ -1,12 +1,15 @@
+import { useState } from 'react'
 import { useSmartHomeStore } from '@/store'
 import DeviceCard from '@/components/DeviceCard'
 import QuickScenes from '@/components/QuickScenes'
 import AlertPanel from '@/components/AlertPanel'
 import EnergyOverview from '@/components/EnergyOverview'
+import { DeviceControlModal } from '@/components/DeviceControlDrawer'
 import { motion } from 'framer-motion'
 
 export default function Dashboard() {
   const devices = useSmartHomeStore((s) => s.devices)
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
 
   const onlineCount = devices.filter((d) => d.status === 'online').length
   const activeCount = devices.filter((d) => {
@@ -55,7 +58,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
                 >
-                  <DeviceCard device={device} />
+                  <DeviceCard device={device} onOpen={() => setSelectedDeviceId(device.id)} />
                 </motion.div>
               ))}
             </div>
@@ -95,7 +98,7 @@ export default function Dashboard() {
                       <div className="w-10 h-1.5 rounded-full bg-dark-500 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-amber-primary transition-all"
-                          style={{ width: `${(activeInRoom / roomDevices.length) * 100}%` }}
+                          style={{ width: `${(activeInRoom / Math.max(roomDevices.length, 1)) * 100}%` }}
                         />
                       </div>
                     </div>
@@ -106,6 +109,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <DeviceControlModal
+        open={selectedDeviceId !== null}
+        deviceId={selectedDeviceId}
+        onClose={() => setSelectedDeviceId(null)}
+      />
     </div>
   )
 }

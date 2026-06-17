@@ -24,16 +24,31 @@ export default function Energy() {
       })()
     : (() => {
         if (viewMode === 'daily') {
-          const days = energyData[0]?.daily.slice(-14) || []
-          return days.map((day, i) => ({
-            name: day.date.slice(5),
-            kWh: energyData.reduce((sum, e) => sum + (e.daily[i]?.kWh || 0), 0),
-          }))
+          // 按日期字符串聚合，确保不同设备同一日期累加
+          const dateMap = new Map<string, number>()
+          energyData.forEach((device) => {
+            device.daily.forEach((d) => {
+              const current = dateMap.get(d.date) ?? 0
+              dateMap.set(d.date, current + d.kWh)
+            })
+          })
+          // 最近 14 天按日期升序
+          return Array.from(dateMap.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .slice(-14)
+            .map(([date, kWh]) => ({ name: date.slice(5), kWh }))
         }
-        return energyData[0]?.monthly.map((m, i) => ({
-          name: m.month.slice(2),
-          kWh: energyData.reduce((sum, e) => sum + (e.monthly[i]?.kWh || 0), 0),
-        })) || []
+        // 月度视图按月份聚合
+        const monthMap = new Map<string, number>()
+        energyData.forEach((device) => {
+          device.monthly.forEach((m) => {
+            const current = monthMap.get(m.month) ?? 0
+            monthMap.set(m.month, current + m.kWh)
+          })
+        })
+        return Array.from(monthMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([month, kWh]) => ({ name: month.slice(2), kWh }))
       })()
 
   const maxKWh = sortedDevices.length > 0 ? sortedDevices[0].totalKWh : 1

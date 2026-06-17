@@ -56,6 +56,7 @@ export interface Trigger {
   config: {
     time?: string
     geofence?: { lat: number; lng: number; radius: number }
+    area?: string
     deviceId?: string
     stateCondition?: Record<string, unknown>
   }
